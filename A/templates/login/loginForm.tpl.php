@@ -5,8 +5,8 @@
 	<div id="login">
 		<h2>Login</h3>
 		<form action="login/submit" method="POST">
-			<span class="label">Username:</span> <span class="input"><input type="text" name="username" value=""></span>
-			<span class="label">Password:</span> <span class="input"><input type="password" name="password" value=""></span>
+			<span class="label">Username:</span> <span class="input"><input type="text" name="username" value="" autocomplete="off"></span>
+			<span class="label">Password:</span> <span class="input"><input type="password" name="password" value="" autocomplete="off"></span>
 			<input class="button purchase" type="submit" value="Login" name="login">
 		</form>
 	</div>
