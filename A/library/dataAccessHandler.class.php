@@ -25,7 +25,7 @@
 				$stmt->execute();
 			}
 
-			return $stmt->get_result();
+			return $this->fetchAllAssoc($stmt->get_result());
 		}
 
 		public function getLastInsertID(){
@@ -47,7 +47,15 @@
 			$this->lastInsertID = $this->mysqli->insert_id;
 		}
 
-		protected function getTypes($data){
+		private function fetchAllAssoc($result){
+			$allRows = array();
+			while($row = $result->fetch_assoc()){
+				array_push($allRows, $row);
+			}
+			return $allRows;
+		}
+
+		private function getTypes($data){
 			$types = "";
 			foreach ($data as $value){
 				if(is_int($value)){ // int
