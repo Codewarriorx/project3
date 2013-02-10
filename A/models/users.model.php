@@ -25,6 +25,20 @@
 			}
 		}
 
+		public function setSession($username){
+			$result = $this->queryDB($this->selectUsernameQuery, $username);
+			$result = array_pop($result);
+			$_SESSION['user'] = $result['username'];
+			$_SESSION['access'] = $result['access'];
+
+			$expire = time()+1200; // 20 minutes
+			$path = "/~mjl7592/";
+			$domain = "nova.it.rit.edu";
+			$secure = false;
+
+			setcookie($result['username'],$result['access'],$expire,$path,$domain,$secure);
+		}
+
 		protected function buildEntities($data){
 			$entities = array();
 			foreach ($data as $row) {
