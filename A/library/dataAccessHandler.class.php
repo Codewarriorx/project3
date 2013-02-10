@@ -1,45 +1,31 @@
 <?php
 	class DataAccessHandler{
-		private $dbHost, $dbName, $dbUser, $dbPass, $pdo, $lastInsertID;
+		private $dbHost, $dbName, $dbUser, $dbPass, $mysqli, $lastInsertID;
 
 		public function __construct(){
 			$this->dbHost = DB_HOST;
 			$this->dbName = DB_NAME;
 			$this->dbUser = DB_USER;
 			$this->dbPass = DB_PASS;
-			$this->pdo = $this->connect();
+			$this->mysqli = $this->connect();
 		}
 
 		private function connect(){
-			try{
-				$pdo = new PDO('mysql:host='.$this->dbHost.';dbname='.$this->dbName, $this->dbUser, $this->dbPass);
-				$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-			}
-			catch(PDOException $e){
-				echo "ERROR: ".$e->getMessage();
-			}
-			return $pdo;
+			return new mysqli($this->dbHost, $this->dbUser, $this->dbPass, $this->dbName);;
 		}
 
 		public function queryDB($query, $id = null){
-			try{
-				$stmt = $this->pdo->prepare($query);
+			$stmt = $this->mysqli->prepare($query);
 
-				if(is_null($id)){
-					$stmt->execute();
-				}
-				else{
-					$stmt->execute($id);
-				}
-
-				$stmt->setFetchMode(PDO::FETCH_ASSOC);
-				$results = $stmt->fetchAll();
+			if(is_null($id)){
+				$stmt->execute();
 			}
-			catch(PDOException $e){
-				echo "ERROR: ".$e->getMessage();
+			else{
+				$stmt->bind_param('i', $id);
+				$stmt->execute();
 			}
 
-			return $results;
+			return $stmt->get_result();
 		}
 
 		public function getLastInsertID(){
@@ -47,15 +33,37 @@
 		}
 
 		protected function updateDB($query, $data){
-			try{
-				$stmt = $this->pdo->prepare($query);
-				$stmt->execute($data);
-			}
-			catch(PDOException $e){
-				echo "ERROR: ".$e->getMessage();
+			$bindParameters = array();
+			$stmt = $this->mysqli->prepare($query);
+			$bindParameters[] = getTypes($data);
+
+			foreach ($data as $key => $value) {
+				$bindParameters[] = &$data[$key];
 			}
 
-			$this->lastInsertID = $this->pdo->lastInsertId();
+			call_user_func_array(array($stmt, 'bind_param'), $bindParameters);
+			$stmt->execute();
+
+			$this->lastInsertID = $this->mysqli->insert_id;
+		}
+
+		protected function getTypes($data){
+			$types = "";
+			foreach ($data as $value){
+				if(is_int($value)){ // int
+					$types .= 'i';
+				}
+				elseif(is_float($value)){ // double
+					$types .= 'd';
+				}
+				elseif(is_string($value)){ // string
+					$types .= 's';
+				}
+				else{ // blob or unknown
+					$types .= 'b';
+				}
+			}
+			return $types;
 		}
 
 		protected function sanitize($string){
