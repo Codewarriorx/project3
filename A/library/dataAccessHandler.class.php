@@ -14,14 +14,15 @@
 			return new mysqli($this->dbHost, $this->dbUser, $this->dbPass, $this->dbName);;
 		}
 
-		public function queryDB($query, $id = null){
+		public function queryDB($query, $value = null){
 			$stmt = $this->mysqli->prepare($query);
 
-			if(is_null($id)){
+			if(is_null($value)){
 				$stmt->execute();
 			}
 			else{
-				$stmt->bind_param('i', $id);
+
+				$stmt->bind_param($this->getTypes(array($value)), $value);
 				$stmt->execute();
 			}
 
@@ -48,11 +49,14 @@
 		}
 
 		private function fetchAllAssoc($result){
-			$allRows = array();
-			while($row = $result->fetch_assoc()){
-				array_push($allRows, $row);
+			if($result){
+				$allRows = array();
+				while($row = $result->fetch_assoc()){
+					array_push($allRows, $row);
+				}
+				return $allRows;
 			}
-			return $allRows;
+			return false;
 		}
 
 		private function getTypes($data){
